@@ -10,4 +10,5 @@
 |Name|Description|
 |----|-----------|
 |instance 1||
+|renamed instance 1||
 
