@@ -46,6 +46,24 @@ Python Version - 3
 
 
 ## Actions
+#### secret_test
+
+Timeout - 600 Seconds
+
+
+|Name|Description|IsMandatory|Type|DefaultValue|
+|----|-----------|-----------|----|------------|
+|mypassword|mydescription|True|Password|this should not be visible|
+
+
+
+##### JSON Results
+```json
+{}
+```
+
+
+
 #### Pause Alert SLA
 Automatically pause the alert SLA
 Timeout - 600 Seconds
