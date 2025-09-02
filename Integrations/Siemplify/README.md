@@ -53,7 +53,7 @@ Timeout - 600 Seconds
 
 |Name|Description|IsMandatory|Type|DefaultValue|
 |----|-----------|-----------|----|------------|
-|mypassword|mydescription|True|Password|this should not be visible|
+|mypassword|mydescription|True|Password|*****|
 
 
 
@@ -669,6 +669,9 @@ Collect cases and connector logs from Publisher.
 |----|-----------|----|------------|
 |Publisher Id|True|Integer||
 |Verify SSL|False|Boolean|False|
+
+#### km_custom_job
+
 
 #### name1
 

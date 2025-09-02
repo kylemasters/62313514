@@ -1,0 +1,18 @@
+{
+    "id": 0,
+    "type": 2,
+    "name": "km_custom_job",
+    "description": "",
+    "script": "from SiemplifyJob import SiemplifyJob\n\nINTEGRATION_NAME = \"CUSTOM_INTEGRATION\"\nSCRIPT_NAME = \"JobTemplate\"\n\n\ndef main():\n    siemplify = SiemplifyJob()\n    siemplify.script_name = SCRIPT_NAME # In order to use the SiemplifyLogger, you must assign a name to the script.\n    \n    # INIT INTEGRATION CONFIGURATION:\n    integration_param = siemplify.extract_configuration_param(provider_name=INTEGRATION_NAME,param_name=\"Param A\")\n\na\n\n    # INIT ACTION PARAMETERS:\n    job_param = siemplify.extract_job_param(param_name=\"Param C\", print_value=True)\n\n\n    try:\n        pass\n        # .... CUSTOM LOGIC HERE....\n        # .... CUSTOM LOGIC HERE....\n        # .... CUSTOM LOGIC HERE....\n\n    except Exception as e:\n        siemplify.LOGGER.error(\"General error performing Job {}\".format(SCRIPT_NAME))\n        siemplify.LOGGER.exception(e)\n        raise\n\n    siemplify.end_script()\n\n\nif __name__ == \"__main__\":\n    main()",
+    "integration": "Siemplify",
+    "creator": "a90cbaea-9e20-4ff9-97bf-c5ea13d1d0de",
+    "creatorFullName": "admin admin",
+    "isEnabled": false,
+    "isCustom": true,
+    "version": 2,
+    "parameters": [],
+    "connectorRules": null,
+    "isConnectorRulesSupported": false,
+    "documentationLink": null,
+    "pythonVersion": "V3_11"
+}
