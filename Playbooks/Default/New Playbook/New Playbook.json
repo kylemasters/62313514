@@ -111,7 +111,7 @@
                     "creationTimeUnixTimeInMs": 0,
                     "modificationTimeUnixTimeInMs": 0,
                     "additionalProperties": {},
-                    "InstanceDisplayName": "GitSync_1"
+                    "InstanceDisplayName": null
                 },
                 {
                     "name": "MessageToAssignee",

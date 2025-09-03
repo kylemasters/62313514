@@ -1,0 +1,13 @@
+[
+    {
+        "id": 0,
+        "source": "QRadar",
+        "product": "Custom Rule Engine",
+        "eventName": "kmevent",
+        "familyName": "Default",
+        "familyId": 0,
+        "mappingStatus": null,
+        "changeSource": 1,
+        "exampleEventFields": []
+    }
+]

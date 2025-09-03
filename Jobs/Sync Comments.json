@@ -1,0 +1,79 @@
+{
+    "lastRunStatus": null,
+    "lastRunTime": null,
+    "uniqueIdentifier": "c8ce0778-cae3-4e96-a03f-9b1cf0fdbed6",
+    "id": 0,
+    "jobDefinitionId": 0,
+    "name": "Sync Comments",
+    "integration": "Jira",
+    "script": "from datetime import datetime, timezone\n\nfrom SiemplifyJob import SiemplifyJob\nfrom SiemplifyUtils import (\n    convert_unixtime_to_datetime,\n    unix_now,\n    output_handler,\n    convert_datetime_to_unix_time,\n)\nfrom TIPCommon.types import SingleJson\n\nfrom JiraConstants import (\n    SYNC_COMMENTS_SCRIPT,\n    DEFAULT_DAYS_BACKWARDS,\n    DEFAULT_SIEMPLIFY_COMMENT_PREFIX,\n    DEFAULT_JIRA_COMMENT_PREFIX,\n    JIRA_TAG,\n    CASE_STATUS_OPEN,\n    MIN_DAYS_BACKWARDS,\n    PRODUCT,\n    JIRA_TIME_FORMAT,\n    JIRA_ISSUE_KEY,\n    JIRA_PROJECT_KEY,\n)\nfrom JiraManager import JiraManager\nfrom exceptions import JiraManagerError\nfrom utils import (\n    fetch_job_last_success_time,\n    get_case_and_alert_ids_for_issue_key,\n    load_csv_to_list,\n)\n\n\ndef get_cases_for_issue(\n    siemplify: SiemplifyJob,\n    issue_key: str,\n    environments: list[str],\n    case_details: SingleJson,\n) -> list[str]:\n    \"\"\"Retrieves case IDs associated with a specific issue key.\n\n    Args:\n        siemplify (SiemplifyJob): SiemplifyJob instance.\n        issue_key (str): The issue key to search for.\n        environments (list[str]): List of environment to filter by.\n        case_details (SingleJson): Dictionary containing details of multiple cases.\n\n    Returns:\n        list[str]: List of case IDs associated with the issue key.\n    \"\"\"\n    case_ids_for_issue = siemplify.get_cases_by_filter(\n        environments=environments,\n        ticked_ids_free_search=issue_key,\n        tags=[JIRA_TAG],\n        statuses=[CASE_STATUS_OPEN],\n    )\n    if not case_ids_for_issue:\n        case_ids_for_issue = list(\n            {\n                case_id\n                for case_id, _ in get_case_and_alert_ids_for_issue_key(\n                    case_details=case_details,\n                    issue_key=issue_key,\n                    chronicle_soar=siemplify,\n                )\n            }\n        )\n\n    return case_ids_for_issue\n\n@output_handler\ndef main():\n    siemplify = SiemplifyJob()\n    siemplify.script_name = SYNC_COMMENTS_SCRIPT\n    siemplify.LOGGER.info(\"--------------- JOB STARTED ---------------\")\n\n    api_root = siemplify.extract_job_param(\n        param_name=\"API Root\", is_mandatory=True, print_value=True\n    )\n    username = siemplify.extract_job_param(\n        param_name=\"Username\", is_mandatory=True, print_value=True\n    )\n    api_token = siemplify.extract_job_param(\n        param_name=\"API Token\", is_mandatory=True, print_value=False\n    )\n    project_names = siemplify.extract_job_param(\n        param_name=\"Project Names\", is_mandatory=False, print_value=True\n    )\n    environment_ = siemplify.extract_job_param(\n        param_name=\"Environment\",\n        print_value=True,\n    )\n    environments = [environment_] if environment_ else []\n\n    try:\n        days_backwards = siemplify.extract_job_param(\n            param_name=\"Days Backwards\",\n            input_type=int,\n            default_value=DEFAULT_DAYS_BACKWARDS,\n            is_mandatory=False,\n            print_value=True,\n        )\n        siemplify_comment_prefix = siemplify.extract_job_param(\n            param_name=\"Siemplify Comment Prefix\",\n            is_mandatory=True,\n            print_value=True,\n            default_value=DEFAULT_SIEMPLIFY_COMMENT_PREFIX,\n        )\n        jira_comment_prefix = siemplify.extract_job_param(\n            param_name=\"Jira Comment Prefix\",\n            is_mandatory=True,\n            default_value=DEFAULT_JIRA_COMMENT_PREFIX,\n            print_value=True,\n        )\n        project_names = load_csv_to_list(project_names, \"Project Names\")\n        context_key: str = f\"{siemplify.script_name}_{siemplify.unique_identifier}\"\n        timestamp_key: str = siemplify.TIMESTAMP_KEY\n        fetch_time: datetime = fetch_job_last_success_time(\n            soar_job=siemplify,\n            days_backwards=days_backwards,\n            context_key=context_key,\n            timestamp_key=timestamp_key,\n        )\n        fetch_time_ms = convert_datetime_to_unix_time(fetch_time)\n        siemplify.LOGGER.info(\n            f\"Last fetch time. Date time:{fetch_time}. Unix:{fetch_time_ms}\"\n        )\n        new_timestamp = unix_now()\n\n        if days_backwards < MIN_DAYS_BACKWARDS:\n            raise Exception(\n                f'\"Days Backwards\" parameter must be greater or equal than {MIN_DAYS_BACKWARDS}'\n            )\n\n        jira_manager = JiraManager(\n            api_root, username, api_token, logger=siemplify.LOGGER\n        )\n\n        siemplify.LOGGER.info(\n            \"--- Start synchronizing Issues Comments from Google SecOps to Jira ---\"\n        )\n\n        fetched_open_cases_ids = siemplify.get_cases_by_filter(\n            environments=environments, statuses=[CASE_STATUS_OPEN], tags=[JIRA_TAG]\n        )\n        siemplify.LOGGER.info(\n            f\"Found {len(fetched_open_cases_ids)} open cases with tag {JIRA_TAG}\"\n        )\n        case_details = {}\n        for case_id in fetched_open_cases_ids:\n            case = siemplify._get_case_by_id(case_id)\n            case_alerts = case.get(\"cyber_alerts\", [])\n            case_details[case_id] = case_alerts\n            case_identifier = case.get(\"identifier\")\n            case_comments = siemplify.get_case_comments(case_identifier)\n\n            for comment in case_comments:\n                comment_time = convert_unixtime_to_datetime(\n                    comment.get(\"modification_time_unix_time_in_ms\")\n                )\n\n                # Filter already created comments and comments that already were processed by the job\n                if comment_time < fetch_time or comment.get(\n                    \"comment\", jira_comment_prefix\n                ).startswith(jira_comment_prefix):\n                    continue\n\n                # Update all cases related to issue of Jira\n                for alert in case_alerts:\n                    issue_key = (\n                        alert.get(\"additional_data\")\n                        if alert.get(\"reporting_product\") != PRODUCT\n                        else alert.get(\"additional_properties\", {}).get(\"AlertName\")\n                    )\n                    if not issue_key:\n                        issue_key = siemplify.get_context_property(\n                            2,\n                            alert.get(\"alert_group_identifier\"),\n                            JIRA_ISSUE_KEY,\n                        )\n                    issue_project = (\n                        alert.get(\"security_events\", [])[0]\n                        .get(\"additional_properties\", {})\n                        .get(\"project_name\")\n                    )\n                    if not issue_project:\n                        issue_project = siemplify.get_context_property(\n                            2,\n                            alert.get(\"alert_group_identifier\"),\n                            JIRA_PROJECT_KEY,\n                        )\n\n                    if issue_project not in project_names:\n                        siemplify.LOGGER.info(\n                            f\"Alert with issue key {issue_key} of project {issue_project} is not in projects:\"\n                            f\" {', '.join(project_names)}\"\n                        )\n                        continue\n\n                    if issue_key:\n                        # Add the comment to Jira ticket\n                        try:\n                            comment_text = (\n                                f\"{siemplify_comment_prefix} {comment.get('comment')}\"\n                            )\n                            siemplify.LOGGER.info(\n                                f\"Adding jira comment with id {comment.get('id')} to issue {issue_key}\"\n                            )\n                            jira_manager.add_comment(issue_key, comment_text)\n                            siemplify.LOGGER.info(\n                                f\"Successfully added comment to issue {issue_key}\"\n                            )\n                        except Exception as error:\n                            siemplify.LOGGER.error(\n                                f\"Failed to add comment to issue {issue_key}, error: {error}\"\n                            )\n                            siemplify.LOGGER.exception(error)\n                    else:\n                        siemplify.LOGGER.info(\n                            f\"Cannot find issue key. Comments from case {case_identifier} not added to issue\"\n                        )\n\n        siemplify.LOGGER.info(\n            \" --- Finish synchronize comments from Google SecOps cases to Jira \"\n            \"issues --- \"\n        )\n        siemplify.LOGGER.info(\n            \"--- Start synchronize Issues Comments from Jira to Google SecOps ---\"\n        )\n\n        # Adjust fetch time to JIRA server's timezone\n        jira_server_time = jira_manager.get_server_time()\n        siemplify.LOGGER.info(f\"JIRA server time: {jira_server_time.isoformat()}\")\n        fetch_time_jira_timezone_adjusted = fetch_time.replace(\n            tzinfo=timezone.utc\n        ).astimezone(jira_server_time.tzinfo)\n        siemplify.LOGGER.info(\n            f\"Adjusted last fetch time to server time: {fetch_time_jira_timezone_adjusted.isoformat()}\"\n        )\n\n        jira_last_time_format = fetch_time_jira_timezone_adjusted.strftime(\n            JIRA_TIME_FORMAT\n        )\n        # Fetch modified issues since last fetch time\n        last_modified_issues = jira_manager.list_issues(\n            updated_from=jira_last_time_format, project_key_list=project_names\n        )\n        siemplify.LOGGER.info(\n            f\"Found {len(last_modified_issues)} issues that modified since \"\n            f\"{fetch_time_jira_timezone_adjusted.isoformat()} (Server Timezone)\"\n        )\n\n        for issue_key in last_modified_issues:\n            comments_to_add = jira_manager.get_issue_comments_since_time(\n                issue_key, fetch_time_ms\n            )\n            siemplify.LOGGER.info(\n                f\"{issue_key} has {len(comments_to_add)} comments since {fetch_time.isoformat()}\"\n            )\n\n            # Filter jira issue comments that were added by siemplify\n            comments_to_add = [\n                comment\n                for comment in comments_to_add\n                if comment.body and siemplify_comment_prefix not in comment.body\n            ]\n\n            if not comments_to_add:\n                siemplify.LOGGER.info(f\"No new comments found in issue: {issue_key}\")\n                continue\n\n            siemplify.LOGGER.info(\n                f\"Found {len(comments_to_add)} new comments of issue {issue_key} \"\n                \"to add to Google SecOps\"\n            )\n\n            try:\n                # Find corresponding Siemplify cases to add comment\n                cases_ids_for_issue = get_cases_for_issue(\n                    siemplify=siemplify,\n                    issue_key=issue_key,\n                    environments=environments,\n                    case_details=case_details,\n                )\n\n                if not cases_ids_for_issue:\n                    siemplify.LOGGER.info(\n                        \"No open Google SecOps cases were found for issue key \"\n                        f\"{issue_key} and tag {JIRA_TAG}\"\n                    )\n                    continue\n\n                for case_id in cases_ids_for_issue:\n                    if comments_to_add:\n                        for comment in comments_to_add:\n                            try:\n                                siemplify.LOGGER.info(\n                                    f\"Adding jira comment with id {comment.id} to case with id {case_id}\"\n                                )\n                                comment_text = f\"{jira_comment_prefix} {comment.body}\"\n                                siemplify.add_comment(comment_text, case_id, None)\n                                siemplify.LOGGER.info(\n                                    \"Successfully added comment to case\"\n                                )\n                            except Exception as error:\n                                siemplify.LOGGER.error(\n                                    f\"Failed to add jira comment with id {comment.id} to case with id {case_id}\"\n                                )\n                                siemplify.LOGGER.exception(error)\n\n            except Exception as error:\n                siemplify.LOGGER.error(\n                    f\"Failed to sync jira issue key {issue_key} comments with \"\n                    \"corresponding Google SecOps case\"\n                )\n                siemplify.LOGGER.exception(error)\n\n        siemplify.set_job_context_property(context_key, timestamp_key, new_timestamp)\n        siemplify.LOGGER.info(\n            \" --- Finish synchronize comments from Jira issues to cases --- \"\n        )\n        siemplify.LOGGER.info(\"--------------- JOB FINISHED ---------------\")\n\n    except (JiraManagerError, Exception) as error:\n        siemplify.LOGGER.error(f\"Got exception on main handler. Error: {error}\")\n        siemplify.LOGGER.exception(error)\n        raise\n\n\nif __name__ == \"__main__\":\n    main()\n",
+    "creator": "Admin",
+    "description": "Sync comments between Google SecOps alert's case and corresponding Jira ticket. Sync mechanism works in both ways, Google SecOps \u2192 Jira and Jira \u2192 Google SecOps",
+    "isEnabled": false,
+    "isCustom": false,
+    "version": 1,
+    "parameters": [
+        {
+            "id": 5,
+            "isMandatory": true,
+            "name": "API Root",
+            "type": 2,
+            "value": "https://{jira_address}"
+        },
+        {
+            "id": 6,
+            "isMandatory": true,
+            "name": "Username",
+            "type": 2,
+            "value": "asdf"
+        },
+        {
+            "id": 8,
+            "isMandatory": false,
+            "name": "Environment",
+            "type": 2,
+            "value": ""
+        },
+        {
+            "id": 9,
+            "isMandatory": false,
+            "name": "Project Names",
+            "type": 2,
+            "value": "project names separated by comma"
+        },
+        {
+            "id": 10,
+            "isMandatory": false,
+            "name": "Days Backwards",
+            "type": 2,
+            "value": "1"
+        },
+        {
+            "id": 11,
+            "isMandatory": true,
+            "name": "Siemplify Comment Prefix",
+            "type": 2,
+            "value": "Google SecOps:"
+        },
+        {
+            "id": 12,
+            "isMandatory": true,
+            "name": "Jira Comment Prefix",
+            "type": 2,
+            "value": "Jira Comment Sync Job:"
+        },
+        {
+            "id": 7,
+            "isMandatory": true,
+            "name": "API Token",
+            "type": 3,
+            "value": "***************"
+        }
+    ],
+    "runIntervalInSeconds": 60,
+    "creationTime": "2025-09-02T13:58:45.937Z",
+    "lastModificationTime": "2025-09-02T13:58:45.937Z",
+    "isSystemJob": false,
+    "jobDefinitionName": "Sync Comments",
+    "agentIdentifier": null
+}

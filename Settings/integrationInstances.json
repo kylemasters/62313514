@@ -1,0 +1,176 @@
+[
+    {
+        "environment": "Default Environment",
+        "integrationIdentifier": "QRadar",
+        "settings": {
+            "instanceDescription": "",
+            "instanceName": "QRadar_1",
+            "settings": [
+                {
+                    "integrationIdentifier": "QRadar",
+                    "propertyName": "API Root",
+                    "propertyDescription": null,
+                    "propertyDisplayName": "API Root",
+                    "propertyType": 2,
+                    "isMandatory": true,
+                    "value": "https://172.30.3.10",
+                    "integrationInstance": "5f07e3fb-3dd4-41c2-80c2-3b44ad60d0d7",
+                    "environment": null,
+                    "id": 13,
+                    "creationTimeUnixTimeInMs": 0,
+                    "modificationTimeUnixTimeInMs": 0
+                },
+                {
+                    "integrationIdentifier": "QRadar",
+                    "propertyName": "API Token",
+                    "propertyDescription": null,
+                    "propertyDisplayName": "API Token",
+                    "propertyType": 3,
+                    "isMandatory": true,
+                    "value": "***************",
+                    "integrationInstance": "5f07e3fb-3dd4-41c2-80c2-3b44ad60d0d7",
+                    "environment": null,
+                    "id": 14,
+                    "creationTimeUnixTimeInMs": 0,
+                    "modificationTimeUnixTimeInMs": 0
+                },
+                {
+                    "integrationIdentifier": "QRadar",
+                    "propertyName": "API Version",
+                    "propertyDescription": null,
+                    "propertyDisplayName": "API Version",
+                    "propertyType": 2,
+                    "isMandatory": true,
+                    "value": "10.1",
+                    "integrationInstance": "5f07e3fb-3dd4-41c2-80c2-3b44ad60d0d7",
+                    "environment": null,
+                    "id": 15,
+                    "creationTimeUnixTimeInMs": 0,
+                    "modificationTimeUnixTimeInMs": 0
+                },
+                {
+                    "integrationIdentifier": "QRadar",
+                    "propertyName": "RunRemotely",
+                    "propertyDescription": null,
+                    "propertyDisplayName": "Run Remotely",
+                    "propertyType": 0,
+                    "isMandatory": false,
+                    "value": "True",
+                    "integrationInstance": "5f07e3fb-3dd4-41c2-80c2-3b44ad60d0d7",
+                    "environment": null,
+                    "id": 16,
+                    "creationTimeUnixTimeInMs": 0,
+                    "modificationTimeUnixTimeInMs": 0
+                },
+                {
+                    "integrationIdentifier": "QRadar",
+                    "propertyName": "AgentIdentifier",
+                    "propertyDescription": null,
+                    "propertyDisplayName": "Agent",
+                    "propertyType": 9,
+                    "isMandatory": false,
+                    "value": null,
+                    "integrationInstance": "5f07e3fb-3dd4-41c2-80c2-3b44ad60d0d7",
+                    "environment": null,
+                    "id": 17,
+                    "creationTimeUnixTimeInMs": 0,
+                    "modificationTimeUnixTimeInMs": 0
+                }
+            ]
+        }
+    },
+    {
+        "environment": "Default Environment",
+        "integrationIdentifier": "Jira",
+        "settings": {
+            "instanceDescription": "",
+            "instanceName": "System Default Instance",
+            "settings": [
+                {
+                    "integrationIdentifier": "Jira",
+                    "propertyName": "Api Root",
+                    "propertyDescription": null,
+                    "propertyDisplayName": "Api Root",
+                    "propertyType": 2,
+                    "isMandatory": true,
+                    "value": "https://google-team-cft2e7vt.atlassian.net/",
+                    "integrationInstance": "b269392a-a057-45ad-9675-0c23766bb716",
+                    "environment": null,
+                    "id": 19,
+                    "creationTimeUnixTimeInMs": 0,
+                    "modificationTimeUnixTimeInMs": 0
+                },
+                {
+                    "integrationIdentifier": "Jira",
+                    "propertyName": "Username",
+                    "propertyDescription": null,
+                    "propertyDisplayName": "Username",
+                    "propertyType": 2,
+                    "isMandatory": true,
+                    "value": "kylemasters@google.com",
+                    "integrationInstance": "b269392a-a057-45ad-9675-0c23766bb716",
+                    "environment": null,
+                    "id": 20,
+                    "creationTimeUnixTimeInMs": 0,
+                    "modificationTimeUnixTimeInMs": 0
+                },
+                {
+                    "integrationIdentifier": "Jira",
+                    "propertyName": "Api Token",
+                    "propertyDescription": null,
+                    "propertyDisplayName": "Api Token",
+                    "propertyType": 3,
+                    "isMandatory": true,
+                    "value": "***************",
+                    "integrationInstance": "b269392a-a057-45ad-9675-0c23766bb716",
+                    "environment": null,
+                    "id": 21,
+                    "creationTimeUnixTimeInMs": 0,
+                    "modificationTimeUnixTimeInMs": 0
+                },
+                {
+                    "integrationIdentifier": "Jira",
+                    "propertyName": "Verify SSL",
+                    "propertyDescription": null,
+                    "propertyDisplayName": "Verify SSL",
+                    "propertyType": 0,
+                    "isMandatory": false,
+                    "value": "True",
+                    "integrationInstance": "b269392a-a057-45ad-9675-0c23766bb716",
+                    "environment": null,
+                    "id": 22,
+                    "creationTimeUnixTimeInMs": 0,
+                    "modificationTimeUnixTimeInMs": 0
+                },
+                {
+                    "integrationIdentifier": "Jira",
+                    "propertyName": "RunRemotely",
+                    "propertyDescription": null,
+                    "propertyDisplayName": "Run Remotely",
+                    "propertyType": 0,
+                    "isMandatory": false,
+                    "value": "False",
+                    "integrationInstance": "b269392a-a057-45ad-9675-0c23766bb716",
+                    "environment": null,
+                    "id": 23,
+                    "creationTimeUnixTimeInMs": 0,
+                    "modificationTimeUnixTimeInMs": 0
+                },
+                {
+                    "integrationIdentifier": "Jira",
+                    "propertyName": "AgentIdentifier",
+                    "propertyDescription": null,
+                    "propertyDisplayName": "Agent",
+                    "propertyType": 9,
+                    "isMandatory": false,
+                    "value": null,
+                    "integrationInstance": "b269392a-a057-45ad-9675-0c23766bb716",
+                    "environment": null,
+                    "id": 24,
+                    "creationTimeUnixTimeInMs": 0,
+                    "modificationTimeUnixTimeInMs": 0
+                }
+            ]
+        }
+    }
+]

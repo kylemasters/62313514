@@ -1,0 +1,22 @@
+{
+    "lastRunStatus": 1,
+    "lastRunTime": 1756933926582,
+    "uniqueIdentifier": "c7e36923-e541-45cf-a889-766a13fd360a",
+    "id": 0,
+    "jobDefinitionId": 0,
+    "name": "Dummy Job",
+    "integration": "QRadar",
+    "script": "from SiemplifyJob import SiemplifyJob\n\nINTEGRATION_NAME = \"QRadar\"\nSCRIPT_NAME = \"Dummy Job\"\n\n\ndef main():\n    siemplify = SiemplifyJob()\n    siemplify.script_name = SCRIPT_NAME # In order to use the SiemplifyLogger, you must assign a name to the script.\n    \n    # INIT INTEGRATION CONFIGURATION:\n    integration_param = siemplify.extract_configuration_param(provider_name=INTEGRATION_NAME,param_name=\"Param A\")\n\n\n    # INIT ACTION PARAMETERS:\n    job_param = siemplify.extract_job_param(param_name=\"Param C\", print_value=True)\n\n\n    try:\n        pass\n        # .... CUSTOM LOGIC HERE....\n        # .... CUSTOM LOGIC HERE....\n        # .... CUSTOM LOGIC HERE....\n\n    except Exception as e:\n        siemplify.LOGGER.error(\"General error performing Job {}\".format(SCRIPT_NAME))\n        siemplify.LOGGER.exception(e)\n        raise\n\n    siemplify.end_script()\n\n\nif __name__ == \"__main__\":\n    main()",
+    "creator": "a90cbaea-9e20-4ff9-97bf-c5ea13d1d0de",
+    "description": "",
+    "isEnabled": false,
+    "isCustom": true,
+    "version": 2,
+    "parameters": [],
+    "runIntervalInSeconds": 60,
+    "creationTime": "2025-09-03T21:03:21.403Z",
+    "lastModificationTime": "2025-09-03T21:12:59.78Z",
+    "isSystemJob": false,
+    "jobDefinitionName": "Dummy Job",
+    "agentIdentifier": "821d00e4-c027-4ae6-a6d1-fd3326fccd03"
+}
